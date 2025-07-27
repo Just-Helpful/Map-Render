@@ -17,6 +17,20 @@
       return (gx + gy) % 2 == 0 ? WHITE_SRC : BLACK_SRC
     }
 
+    /** creates a tile generator for the Ordinance Survey maps
+     * @param {string} key the api key to use accessing the OS api
+     * @param {number} ox the x offset of the map (longitude)
+     * @param {number} oy the y offset of the map (lattitude)
+     */
+    function os_map(key, [ox, oy]) {
+      const url = "https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/9"
+
+      return function src_at([x, y], [w, h]) {
+        const [gx, gy] = [Math.floor(x / w), Math.floor(y / h)]
+        return `${url}/${gx + ox}/${gy + oy}.png`
+      }
+    }
+
     /** the currently rendered nodes on the map
      * @type {{[key: string]: [[number, number], HTMLImageElement]}}
      */
