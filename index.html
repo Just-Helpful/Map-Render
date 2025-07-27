@@ -97,7 +97,8 @@
       
       generate_tiles(canvas)
 
-      document.addEventListener("scroll", ev => generate_tiles(canvas))
+      document.addEventListener("scroll", () => generate_tiles(canvas))
+      document.addEventListener("resize", () => generate_tiles(canvas))
     }
   </script>
 
