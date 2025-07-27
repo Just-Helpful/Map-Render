@@ -27,7 +27,7 @@
 
       return function src_at([x, y], [w, h]) {
         const [gx, gy] = [Math.floor(x / w), Math.floor(y / h)]
-        return `${url}/${gx + ox}/${gy + oy}.png`
+        return `${url}/${gx + ox}/${gy + oy}.png?key=${key}`
       }
     }
 
