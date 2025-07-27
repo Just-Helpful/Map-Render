@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<head>
+  <script type="text/javascript">
+    // global constants
+    const [gw, gh] = [1000, 1000] // the number of tiles in the grid in total
+    const [tw, th] = [100, 100] // the width and height of an individual tile
+
+    // src generation for image tiles
+    const WHITE_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVR4AQEEAPv/AP///wX+Av5JZm4rAAAAAElFTkSuQmCC"
+    const BLACK_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVR4AQEEAPv/AAAAAAAEAAFlScNgAAAAAElFTkSuQmCC"
+
+    /** the image src to use for a tile at x, y of w, h 
+     * override this function if you want to load custom map tiles
+     */
+    function src_at([x, y], [w, h]) {
+      const [gx, gy] = [Math.floor(x / tw), Math.floor(y / th)]
+      return (gx + gy) % 2 == 0 ? WHITE_SRC : BLACK_SRC
+    }
+
+    /** the currently rendered nodes on the map
+     * @type {{[key: string]: [[number, number], HTMLImageElement]}}
+     */
+    let nodes = {}
+
+    /** Generates tiles around the current viewport
+     * @param {HTMLDivElement} canvas
+     */
+    function generate_tiles(canvas) {
+      const [x, y] = [window.scrollX, window.scrollY]
+      const [w, h] = [window.innerWidth, window.innerHeight]
+      
+      // extend viewport so scrolling is smooth
+      const [x0, y0] = [x - w * 0.25, y - h * 0.25]
+      const [x1, y1] = [x + w * 1.25, y + h * 1.25]
+
+      // calculate the grid indices
+      const [gx0, gy0] = [Math.floor(x0 / tw), Math.floor(y0 / th)]
+      const [gx1, gy1] = [Math.floor(x1 / tw), Math.floor(y1 / th)]
+
+      // fill the grid with images
+      for (let gy = Math.max(0, gy0); gy < Math.min(gy1, gh); gy++) {
+        for (let gx = Math.max(0, gx0); gx < Math.min(gx1, gw); gx++) {
+          if (`${gx},${gy}` in nodes) continue; // don't regenerate nodes
+          const [x, y] = [gx * tw, gy * th]
+
+          const img = document.createElement("img")
+          img.src = src_at([x, y], [tw, th])
+          img.style.left = `${x}px`
+          img.style.top = `${y}px`
+          img.style.width = `${tw}px`
+          img.style.height = `${th}px`
+
+          nodes[`${gx},${gy}`] = [[gx, gy], img]
+          canvas.appendChild(img)
+        }
+      }
+
+      // delete nodes outside seen
+      const to_delete = Object.values(nodes)
+        .map(([gpos, _]) => gpos)
+        .filter(([gx, gy]) => {
+          const in_x = (gx0 <= gx) && (gx < gx1)
+          const in_y = (gy0 <= gy) && (gy < gy1)
+          return !(in_x && in_y)
+        })
+
+      for (const [gx, gy] of to_delete) {
+        nodes[`${gx},${gy}`][1].remove()
+        delete nodes[`${gx},${gy}`]
+      }
+    }
+
+    /** initialisation, fill grid for current view, start in center */
+    function init() {
+      const canvas = document.getElementById("map-canvas");
+      canvas.style.width = `${gw * tw}px`
+      canvas.style.height = `${gh * th}px`
+
+      // scroll to center of page
+      const [vw, vh] = [window.innerWidth, window.innerHeight]
+      document.documentElement.scrollTo((gw * tw) / 2 - vw / 2, (gh * th) / 2 - vh / 2)
+      
+      generate_tiles(canvas)
+
+      document.addEventListener("scroll", ev => generate_tiles(canvas))
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0px;
+    }
+    
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    #map-canvas>img {
+      position: absolute;
+    }
+  </style>
+</head>
+
+<body onload="init()">
+  <div id="map-canvas"></div>
+</body>
