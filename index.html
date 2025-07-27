@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <head>
+  <script type="text/javascript" src="/keys.js"></script>
   <script type="text/javascript">
     // global constants
     const [gw, gh] = [1000, 1000] // the number of tiles in the grid in total
@@ -9,11 +10,10 @@
     const WHITE_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVR4AQEEAPv/AP///wX+Av5JZm4rAAAAAElFTkSuQmCC"
     const BLACK_SRC = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAD0lEQVR4AQEEAPv/AAAAAAAEAAFlScNgAAAAAElFTkSuQmCC"
 
-    /** the image src to use for a tile at x, y of w, h 
+    /** the image src to use for a tile at grid x, y of size w, h
      * override this function if you want to load custom map tiles
      */
-    function src_at([x, y], [w, h]) {
-      const [gx, gy] = [Math.floor(x / tw), Math.floor(y / th)]
+    function src_at([gx, gy], [w, h]) {
       return (gx + gy) % 2 == 0 ? WHITE_SRC : BLACK_SRC
     }
 
@@ -25,8 +25,7 @@
     function os_map(key, [ox, oy]) {
       const url = "https://api.os.uk/maps/raster/v1/zxy/Leisure_27700/9"
 
-      return function src_at([x, y], [w, h]) {
-        const [gx, gy] = [Math.floor(x / w), Math.floor(y / h)]
+      return function src_at([gx, gy], [w, h]) {
         return `${url}/${gx + ox}/${gy + oy}.png?key=${key}`
       }
     }
@@ -60,7 +59,7 @@
           const [x, y] = [gx * tw, gy * th]
 
           const img = document.createElement("img")
-          img.src = src_at([x, y], [tw, th])
+          img.src = src_at([gx - gw / 2, gy - gh / 2], [tw, th])
           img.style.left = `${x}px`
           img.style.top = `${y}px`
           img.style.width = `${tw}px`
